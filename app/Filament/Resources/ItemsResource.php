@@ -9,6 +9,7 @@ use App\Models\Items;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -32,20 +33,28 @@ class ItemsResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('category_id')
-                ->label('Category')
-                ->options(Categories::all()->pluck('category_name', 'id')),
 
-                TextInput::make('barcode')->required(),
-                TextInput::make('item_name')->required(),
-                TextInput::make('price')->numeric()->step(0.01),
-                Checkbox::make('published'),
-                Textarea::make('description')->autosize(),
+                Section::make('Create an item')->schema([
+                    Select::make('category_id')
+                    ->label('Category')
+                    ->options(Categories::all()->pluck('category_name', 'id')),
 
-                FileUpload::make('image')
-                ->disk('public')
-                ->directory('item_images'),
-            ]);
+                    TextInput::make('barcode')->required(),
+                    TextInput::make('item_name')->required(),
+                    TextInput::make('price')->numeric()->step(0.01),
+
+                    Checkbox::make('published'),
+
+                ])->columnSpan(1)->columns(1),
+
+                Section::make()->schema([
+                    Textarea::make('description')->autosize(),
+                    FileUpload::make('image')
+                    ->disk('public')
+                    ->directory('item_images'),
+                ])->columnSpan(1),
+
+            ])->columns(2);
     }
 
     public static function table(Table $table): Table
@@ -54,10 +63,18 @@ class ItemsResource extends Resource
             ->columns([
                 TextColumn::make('id'),
                 ImageColumn::make('image'),
-                TextColumn::make('Category.category_name'),
+                TextColumn::make('Category.category_name')
+                ->sortable()
+                ->searchable(),
 
-                TextColumn::make('barcode'),
-                TextColumn::make('item_name'),
+                TextColumn::make('barcode')
+                ->sortable()
+                ->searchable(),
+
+                TextColumn::make('item_name')
+                ->sortable()
+                ->searchable(),
+
                 TextColumn::make('price'),
                 CheckboxColumn::make('published'),
             ])
